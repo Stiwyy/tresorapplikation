@@ -1,5 +1,6 @@
 package ch.bbw.pr.tresorbackend.service;
 
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 /**
@@ -9,17 +10,29 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PasswordEncryptService {
-   //todo add implementation here
+    private static final String PEPPER = "SuperSecretPepper123!";
+    private static final int BCRYPT_COST = 12;
 
-   public PasswordEncryptService() {
-      //todo add implementation here
-   }
+    public PasswordEncryptService() { }
 
-   public String hashPassword(String password) {
-      //todo add implementation here
-      return password;
-   }
+    public String hashPassword(String password) {
+        if (password == null) {
+            throw new IllegalArgumentException("password must not be null");
+        }
+        String pwdWithPepper = password + PEPPER;
+        String salt = BCrypt.gensalt(BCRYPT_COST);
+        return BCrypt.hashpw(pwdWithPepper, salt);
+    }
 
-   //Todo add password match function: password vs hashedPassword
-
+    public boolean doPasswordMatch(String password, String hashedPassword) {
+        if (password == null || hashedPassword == null) {
+            return false;
+        }
+        String rawWithPepper = password + PEPPER;
+        try {
+            return BCrypt.checkpw(rawWithPepper, hashedPassword);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
 }
